@@ -3,9 +3,9 @@ import sys
 from pathlib import Path
 
 import click
-import tomlkit as tk
 
 from .conf import TomlConf
+from .conf_readers import conf_reader_factory
 from .env import EnvReader
 
 logging.basicConfig(level=logging.INFO, stream=sys.stderr)
@@ -20,17 +20,13 @@ def cli():
 
 @cli.command()
 @click.argument("path")
-def create(path):
-    """Create a new toml conf file from existing config file"""
-    # TODO: factory to get correct reader type based on file path
-    env = EnvReader(Path(path))
+def sync(path):
+    """Syncrhonize or create a new claws-conf file with its config file"""
+    path = Path(path)
+    reader = conf_reader_factory(path.suffix)
+    conf_data = reader(path)
     conf = TomlConf(Path("test_confs/test-conf.toml"))
-    conf.create(env)
-
-
-@cli.command()
-def sync():
-    click.echo("sync")
+    conf.create(conf_data)
 
 
 @cli.command()
@@ -41,5 +37,5 @@ def validate(path):
     conf.validate(env.data)
 
 
-cli.add_command(create)
 cli.add_command(sync)
+cli.add_command(validate)
