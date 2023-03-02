@@ -2,7 +2,7 @@ import re
 from typing import Any
 
 from .base_validator import BaseValidator
-from .exceptions import ValidationConfigError, ValidationError
+from .exceptions import ValidationConfigError, ValidationError, ValidatorNotFoundError
 
 
 class StringValidator(BaseValidator):
@@ -99,9 +99,17 @@ class FloatValidator(IntegerValidator):
             raise ValidationError("Not a float")
 
 
-VALIDATOR_MAP = {
+_VALIDATION_MAP = {
     "string": StringValidator,
     "regex": RegexStringValidator,
     "integer": IntegerValidator,
     "float": FloatValidator,
 }
+
+
+def validation_factory(type: str) -> type[BaseValidator]:
+    """Return a BaseValidator based on type"""
+    try:
+        return _VALIDATION_MAP[type]
+    except KeyError:
+        raise ValidatorNotFoundError(f"No validator found for type: {type}")
