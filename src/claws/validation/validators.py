@@ -11,6 +11,7 @@ class StringValidator(BaseValidator):
     def __init__(self, min_length: int = None, max_length: int | None = None):
         self._min_length = min_length if min_length is not None else 0
         self._max_length = max_length
+        super().__init__()
 
     def _validate_setup(self) -> None:
         if self._min_length < 0:
@@ -18,9 +19,15 @@ class StringValidator(BaseValidator):
                 f"min_length must be >= 0, got {self._min_length}"
             )
 
-        if self._max_length is not None and self._max_lenth < 1:
+        if self._max_length is not None and self._max_length < 1:
             raise ValidationConfigError(
                 f"max_length must be > 0, got {self._max_length}"
+            )
+
+        if self._max_length is not None and self._max_length < self._min_length:
+            raise ValidationConfigError(
+                f"max_length ({self._max_length}) must be > min_length "
+                f"({self._min_length})"
             )
 
     def check(self, value: str) -> None:
@@ -44,6 +51,7 @@ class RegexStringValidator(BaseValidator):
         self._regex = re.compile(regex)
         self._err_msg = err_msg
         self._default_msg = f"Must match regex pattern: {regex}"
+        super().__init__()
 
     def check(self, value: str) -> None:
         if not self._regex.match(value):
@@ -57,6 +65,7 @@ class IntegerValidator(BaseValidator):
     def __init__(self, min: int | None = None, max: int | None = None) -> None:
         self._min = min
         self._max = max
+        super().__init__()
 
     def check(self, value: str) -> None:
         converted = self._convert_type(value)
