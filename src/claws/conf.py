@@ -5,7 +5,12 @@ from typing import Any, Callable
 import tomlkit as tk
 from tomlkit import items
 
-from .validation import VALIDATOR_MAP, BaseValidator, ValidationError
+from .validation import (
+    VALIDATOR_MAP,
+    BaseValidator,
+    ValidationConfigError,
+    ValidationError,
+)
 
 log = logging.getLogger(__name__)
 
@@ -38,14 +43,17 @@ class TomlConf:
                 continue
 
             value = data[field]
-            validator: BaseValidator = validator_class(
-                **field_data.get("validation", {})
-            )
-
             try:
+                validator: BaseValidator = validator_class(
+                    **field_data.get("validation", {})
+                )
+
                 validator.check(value)
             except ValidationError as e:
                 print(f"{field}: {value}")
+                print(f"  {e}")
+            except ValidationConfigError as e:
+                print(f"{field}: Validation Configuration Error")
                 print(f"  {e}")
 
     def dump(self) -> None:
