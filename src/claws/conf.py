@@ -82,7 +82,7 @@ class TomlConf:
 
         # TODO: Find leaves, build up dotted location as name
         fields_table = tk.table(True)
-        for name, v in conf_data.data.items():
+        for name, v in conf_data.items():
             if name not in fields_table:
                 fields_table.add(name, field_builder(name, v))
 
