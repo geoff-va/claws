@@ -5,6 +5,8 @@ from typing import Any, Callable
 import tomlkit as tk
 from tomlkit import items
 
+from .validation import validators
+
 log = logging.getLogger(__name__)
 
 CONF_TABLE_NAME = "conf-options"
@@ -17,18 +19,14 @@ class TomlConf:
         self._doc = self._load_file(path)
 
     def _load_file(self, path: Path) -> tk.TOMLDocument:
-        # TODO: Should we ever load an existing one?
-        # if path.exists():
-        #     log.info("Loading existing path: %s", path)
-        #     with path.open("rb") as fin:
-        #         return tk.load(fin)
-        # log.info("Path %s does not exist, creating new toml document", path)
+        if path.exists():
+            log.info("Loading existing path: %s", path)
+            with path.open("rb") as fin:
+                return tk.load(fin)
+        log.info("Path %s does not exist, creating new toml document", path)
         return tk.document()
 
-    def add_conf_table(self) -> None:
-        pass
-
-    def add_structure(self) -> None:
+    def validate(self) -> None:
         pass
 
     def dump(self) -> None:
@@ -57,8 +55,7 @@ class TomlConf:
         fields_table = tk.table(True)
         for name, v in conf_data.data.items():
             if name not in fields_table:
-                field_table = field_builder(name, v)
-                fields_table.add(name, field_table)
+                fields_table.add(name, field_builder(name, v))
 
         self._doc.add(FIELDS_TABLE_NAME, fields_table)
         self.dump()
