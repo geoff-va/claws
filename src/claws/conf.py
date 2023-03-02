@@ -5,7 +5,7 @@ from typing import Any, Callable
 import tomlkit as tk
 from tomlkit import items
 
-from .validation import validators
+from .validation import VALIDATOR_MAP, BaseValidator, ValidationError
 
 log = logging.getLogger(__name__)
 
@@ -26,8 +26,27 @@ class TomlConf:
         log.info("Path %s does not exist, creating new toml document", path)
         return tk.document()
 
-    def validate(self) -> None:
-        pass
+    def validate(self, data: dict) -> None:
+        for field, field_data in self._doc["fields"].items():
+            validator_class = VALIDATOR_MAP.get(field_data["type"], None)
+            if validator_class is None:
+                log.warning("No validation class found for %s", field_data["type"])
+                continue
+
+            if field not in data:
+                log.warning("Field %s doesn't exist in loaded configuration", field)
+                continue
+
+            value = data[field]
+            validator: BaseValidator = validator_class(
+                **field_data.get("validation", {})
+            )
+
+            try:
+                validator.check(value)
+            except ValidationError as e:
+                print(f"{field}: {value}")
+                print(f"  {e}")
 
     def dump(self) -> None:
         """Write current doc to file"""
