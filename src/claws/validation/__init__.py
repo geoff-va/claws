@@ -1,5 +1,5 @@
 from .base_validator import BaseValidator
-from .exceptions import ValidationError
+from .exceptions import ValidationConfigError, ValidationError
 from .validators import (
     VALIDATOR_MAP,
     FloatValidator,
