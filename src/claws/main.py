@@ -33,12 +33,13 @@ def sync():
     click.echo("sync")
 
 
+@cli.command()
+@click.argument("path")
+def validate(path):
+    env = EnvReader(Path(path))
+    conf = TomlConf(Path("test_confs/test-conf.toml"))
+    conf.validate(env)
+
+
 cli.add_command(create)
 cli.add_command(sync)
-
-"""
-- read .toml if it exists
-- Doesn't exist,
-- read the target .env file
-
-"""
