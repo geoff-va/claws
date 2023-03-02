@@ -24,14 +24,8 @@ def create(path):
     """Create a new toml conf file from existing config file"""
     # TODO: factory to get correct reader type based on file path
     env = EnvReader(Path(path))
-    conf = TomlConf(Path("test-conf.toml"))
-    for k, v in env.data.items():
-        fields = conf._doc.get("fields", {})
-        log.info(f"Doing: {k=}")
-        if k not in fields:
-            conf.add_field(k, type="string", location=k, default=v)
-            conf._doc.add(tk.nl())
-    conf.dump()
+    conf = TomlConf(Path("test_confs/test-conf.toml"))
+    conf.create(env)
 
 
 @cli.command()
