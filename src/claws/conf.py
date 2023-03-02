@@ -6,10 +6,11 @@ import tomlkit as tk
 from tomlkit import items
 
 from .validation import (
-    VALIDATOR_MAP,
     BaseValidator,
     ValidationConfigError,
     ValidationError,
+    ValidatorNotFoundError,
+    validation_factory,
 )
 
 log = logging.getLogger(__name__)
@@ -33,8 +34,9 @@ class TomlConf:
 
     def validate(self, data: dict) -> None:
         for field, field_data in self._doc["fields"].items():
-            validator_class = VALIDATOR_MAP.get(field_data["type"], None)
-            if validator_class is None:
+            try:
+                validator_class = validation_factory(field_data["type"])
+            except ValidatorNotFoundError:
                 log.warning("No validation class found for %s", field_data["type"])
                 continue
 
