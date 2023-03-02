@@ -35,7 +35,7 @@ _CONF_READER_MAP = {
 
 def conf_reader_factory(file_ext: str) -> Callable[[Path], dict]:
     """Return a function to read the specified file_ext"""
-    reader = _CONF_READER_MAP.get(file_ext)
-    if reader is None:
+    try:
+        return _CONF_READER_MAP[file_ext]
+    except KeyError:
         raise UnsupportedFileTypeError(f"Unsupported config file type: {file_ext}")
-    return reader
