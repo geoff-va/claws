@@ -7,3 +7,7 @@ class ValidationError(ClawsError):
 
 class ValidationConfigError(ClawsError):
     """Raised if there is an error configuring validation"""
+
+
+class ValidatorNotFoundError(ClawsError):
+    """Raised when trying to access a validator that doesn't exist"""
