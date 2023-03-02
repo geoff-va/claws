@@ -88,3 +88,11 @@ class FloatValidator(IntegerValidator):
             return float(value)
         except ValueError:
             raise ValidationError("Not a float")
+
+
+VALIDATOR_MAP = {
+    "string": StringValidator,
+    "regex": RegexStringValidator,
+    "integer": IntegerValidator,
+    "float": FloatValidator,
+}
