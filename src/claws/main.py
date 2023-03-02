@@ -38,7 +38,7 @@ def sync():
 def validate(path):
     env = EnvReader(Path(path))
     conf = TomlConf(Path("test_confs/test-conf.toml"))
-    conf.validate(env)
+    conf.validate(env.data)
 
 
 cli.add_command(create)
