@@ -59,20 +59,32 @@ class IntegerValidator(BaseValidator):
         self._max = max
 
     def check(self, value: str) -> None:
-        try:
-            int_val = int(value)
-        except ValueError:
-            raise ValidationError("Not an int")
+        converted = self._convert_type(value)
+
         if self._min is not None and self._max is not None:
-            if not (self._min < int_val < self._max):
+            if not (self._min < converted < self._max):
                 raise ValidationError(
-                    f"Must be between {self._min} and {self._max}, got {int_val}"
+                    f"Must be between {self._min} and {self._max}, got {converted}"
                 )
 
         elif self._min is not None:
-            if int_val < self._min:
-                raise ValidationError(f"Must be > {self._min}, got {int_val}")
+            if converted < self._min:
+                raise ValidationError(f"Must be > {self._min}, got {converted}")
 
         elif self._max is not None:
-            if int_val > self._min:
-                raise ValidationError(f"Must be < {self._max}, got {int_val}")
+            if converted > self._min:
+                raise ValidationError(f"Must be < {self._max}, got {converted}")
+
+    def _convert_type(self, value: Any) -> int:
+        try:
+            return int(value)
+        except ValueError:
+            raise ValidationError("Not an int")
+
+
+class FloatValidator(IntegerValidator):
+    def _convert_type(self, value: Any) -> int:
+        try:
+            return float(value)
+        except ValueError:
+            raise ValidationError("Not a float")
