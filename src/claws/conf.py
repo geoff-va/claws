@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
 import tomlkit as tk
 from tomlkit import items
@@ -17,6 +17,7 @@ class TomlConf:
         self._doc = self._load_file(path)
 
     def _load_file(self, path: Path) -> tk.TOMLDocument:
+        # TODO: Should we ever load an existing one?
         # if path.exists():
         #     log.info("Loading existing path: %s", path)
         #     with path.open("rb") as fin:
@@ -50,7 +51,7 @@ class TomlConf:
             field_builder (Callable): used to build a field
         """
         if field_builder is None:
-            field_builder = self.build_field_table
+            field_builder = build_field
 
         # TODO: Find leaves, build up dotted location as name
         fields_table = tk.table(True)
@@ -62,12 +63,38 @@ class TomlConf:
         self._doc.add(FIELDS_TABLE_NAME, fields_table)
         self.dump()
 
-    def build_field_table(self, name, item: str) -> items.Table:
-        """Return"""
-        table = tk.table()
-        table["name"] = name
-        table["type"] = "string"
-        table["display_name"] = ""
-        table["default"] = item
-        table["help"] = ""
-        return table
+
+def build_field(name: str, value: Any) -> items.Table:
+    """Return"""
+    table = tk.table()
+    # TODO: Do I need a name field?
+    table["name"] = name
+    table["type"] = _guess_field_type(value)
+    table["default"] = value
+    return table
+
+
+def _guess_field_type(value: Any) -> str:
+    """Try to return a field type based on value"""
+    if isinstance(value, int):
+        return "integer"
+
+    if isinstance(value, float):
+        return "float"
+
+    if isinstance(value, str):
+        if value.lower().strip() in ("true", "false"):
+            return bool
+
+        if "." in value:
+            try:
+                float(value)
+                return "float"
+            except ValueError:
+                return "string"
+
+        try:
+            int(value)
+            return "integer"
+        except ValueError:
+            return "string"
