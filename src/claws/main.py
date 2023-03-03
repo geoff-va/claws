@@ -1,10 +1,11 @@
 import logging
 import sys
 from pathlib import Path
+from pprint import pprint
 
 import click
 
-from .conf import TomlConf
+from .conf import TomlConf, flatten_dict, test_dic
 from .conf_readers import conf_reader_factory
 from .env import EnvReader
 
@@ -37,5 +38,15 @@ def validate(path):
     conf.validate(env.data)
 
 
+@cli.command()
+def test():
+    pprint(test_dic)
+    loc = []
+    flattened = {}
+    flatten_dict(test_dic, loc, flattened)
+    pprint(flattened)
+
+
 cli.add_command(sync)
 cli.add_command(validate)
+cli.add_command(test)

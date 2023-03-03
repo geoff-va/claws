@@ -89,12 +89,18 @@ class TomlConf:
         self._doc.add(FIELDS_TABLE_NAME, fields_table)
         self.dump()
 
+    def sync(self, conf_data: dict) -> None:
+        """Adds/Removes fields from current toml doc based on fields in data"""
+        # get all fields in conf_data and their locations
+        # build list of doc fields and locations
+        # Remove any not in conf_data
+        # Add missing from conf_data
+        # build final table
 
-def build_field(name: str, value: Any) -> items.Table:
-    """Return"""
+
+def build_field(value: Any) -> items.Table:
+    """Return default field table"""
     table = tk.table()
-    # TODO: Do I need a name field?
-    table["name"] = name
     table["type"] = _guess_field_type(value)
     table["default"] = value
     return table
@@ -124,3 +130,18 @@ def _guess_field_type(value: Any) -> str:
             return "integer"
         except ValueError:
             return "string"
+
+
+def flatten_dict(node: dict, location: list[str], flattened: dict) -> None:
+    for k, v in node.items():
+        location += [k]
+        if _is_leaf(v):
+            flattened[".".join(location)] = v
+        else:
+            flatten_dict(v, location, flattened)
+        location.pop(-1)
+
+
+def _is_leaf(value: Any) -> bool:
+    """Return True if the current value is a leaf"""
+    return False if isinstance(value, dict) else True
