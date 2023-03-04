@@ -5,7 +5,7 @@ from pprint import pprint
 
 import click
 
-from .conf import TomlConf, flatten_dict, test_dic
+from .conf import TomlConf, flatten_dict
 from .conf_readers import conf_reader_factory
 from .env import EnvReader
 
@@ -27,7 +27,7 @@ def sync(path):
     reader = conf_reader_factory(path.suffix)
     conf_data = reader(path)
     conf = TomlConf(Path("test_confs/test-conf.toml"))
-    conf.create(conf_data)
+    conf.sync(conf_data)
 
 
 @cli.command()
