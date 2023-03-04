@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 
 import tomlkit as tk
 from tomlkit import items
@@ -23,6 +23,9 @@ class TomlConf:
     def __init__(self, path: Path) -> None:
         self._path = path
         self._doc = self._load_file(path)
+        self._fields_table = self._doc.get(FIELDS_TABLE_NAME, tk.table(True))
+        if FIELDS_TABLE_NAME not in self._doc:
+            self._doc.add(FIELDS_TABLE_NAME, self._fields_table)
 
     def _load_file(self, path: Path) -> tk.TOMLDocument:
         if path.exists():
@@ -33,7 +36,7 @@ class TomlConf:
         return tk.document()
 
     def validate(self, data: dict) -> None:
-        for field, field_data in self._doc["fields"].items():
+        for field, field_data in self._fields_table.items():
             try:
                 validator_class = validation_factory(field_data["type"])
             except ValidatorNotFoundError:
@@ -64,38 +67,47 @@ class TomlConf:
             tk.dump(self._doc, fout)
             log.info("Wrote: %s", self._path)
 
-    def create(
-        self,
-        conf_data: dict,
-        field_builder: Callable[[dict], items.Table] | None = None,
+    def sync(
+        self, conf_data: dict, field_builder: Callable[[dict], items.Table] = None
     ) -> None:
-        """Create a new .toml conf file from data_in
-
-        NOTE: Currently only works with .env style data
-
-        Args:
-            conf_data (dict): dict of the incoming configuration data
-            field_builder (Callable): used to build a field
-        """
+        """Adds/Removes fields from current toml doc based on fields in conf_data"""
         if field_builder is None:
             field_builder = build_field
 
-        # TODO: Find leaves, build up dotted location as name
-        fields_table = tk.table(True)
-        for name, v in conf_data.items():
-            if name not in fields_table:
-                fields_table.add(name, field_builder(name, v))
+        conf_fields = flatten_dict(conf_data)
+        current_fields = squash(flatten_dict(self._doc.get("fields", {})))
 
-        self._doc.add(FIELDS_TABLE_NAME, fields_table)
-        self.dump()
+        to_add = conf_fields.keys() - current_fields.keys()
+        to_remove = current_fields.keys() - conf_fields.keys()
+        breakpoint()
 
-    def sync(self, conf_data: dict) -> None:
-        """Adds/Removes fields from current toml doc based on fields in data"""
-        # get all fields in conf_data and their locations
-        # build list of doc fields and locations
-        # Remove any not in conf_data
-        # Add missing from conf_data
-        # build final table
+        # Add fields
+        self._add_fields()
+
+        # Remove Fields
+
+    def _add_fields(self, fields: dict[str, Any], conf_data: dict) -> None:
+        """Remove keys from fields table"""
+        for location, default in fields.items():
+            field = build_field(default)
+            self._fields_table.add(field)
+            log.debug("Added Field: %s", location)
+
+    def _remove_fields(self, field_locations: Iterable[str]) -> None:
+        """Remove fields from fields table"""
+        for location in field_locations:
+            self._fields_table.pop(location)
+            log.debug("Removed Field: %s", location)
+
+
+def squash(flattened: dict) -> dict:
+    result = {}
+    for k, v in flattened.items():
+        parts = k.split(".")
+        path, attr = parts[:-1], parts[-1]
+        if attr == "default":
+            result[".".join(path)] = v
+    return result
 
 
 def build_field(value: Any) -> items.Table:
@@ -132,13 +144,19 @@ def _guess_field_type(value: Any) -> str:
             return "string"
 
 
-def flatten_dict(node: dict, location: list[str], flattened: dict) -> None:
+def flatten_dict(dic: dict) -> dict:
+    data = {}
+    _flatten_dict(dic, [], data)
+    return data
+
+
+def _flatten_dict(node: dict, location: list[str], flattened: dict) -> None:
     for k, v in node.items():
         location += [k]
         if _is_leaf(v):
             flattened[".".join(location)] = v
         else:
-            flatten_dict(v, location, flattened)
+            _flatten_dict(v, location, flattened)
         location.pop(-1)
 
 
