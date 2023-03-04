@@ -79,19 +79,19 @@ class TomlConf:
 
         to_add = conf_fields.keys() - current_fields.keys()
         to_remove = current_fields.keys() - conf_fields.keys()
-        breakpoint()
 
-        # Add fields
-        self._add_fields()
+        self._add_fields(to_add, conf_fields)
+        self._remove_fields(to_remove)
 
-        # Remove Fields
+        self.dump()
 
-    def _add_fields(self, fields: dict[str, Any], conf_data: dict) -> None:
-        """Remove keys from fields table"""
-        for location, default in fields.items():
+    def _add_fields(self, fields: set[str], conf_data: dict) -> None:
+        """Add keys to fields table"""
+        for field_name in fields:
+            default = conf_data[field_name]
             field = build_field(default)
-            self._fields_table.add(field)
-            log.debug("Added Field: %s", location)
+            self._fields_table.add(field_name, field)
+            log.debug("Added Field: %s", field_name)
 
     def _remove_fields(self, field_locations: Iterable[str]) -> None:
         """Remove fields from fields table"""
