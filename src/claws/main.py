@@ -9,7 +9,7 @@ from .conf import TomlConf, flatten_dict
 from .conf_readers import conf_reader_factory
 from .env import EnvReader
 
-logging.basicConfig(level=logging.INFO, stream=sys.stderr)
+logging.basicConfig(level=logging.DEBUG, stream=sys.stderr)
 
 log = logging.getLogger(__name__)
 
